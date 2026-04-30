@@ -24,6 +24,10 @@ app.include_router(chat_router, prefix="/api")
 app.include_router(memory_router, prefix="/api")
 
 
+@app.get("/")
+async def root():
+    return {"message": "Agent Rocky Backend is Live! Please use the frontend app to interact."}
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
