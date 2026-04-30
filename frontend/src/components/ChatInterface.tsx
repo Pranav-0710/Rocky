@@ -10,6 +10,8 @@ interface Message {
   timestamp: Date;
 }
 
+const PIN_CODE = "0710"; // You can change this to any 4-digit code
+
 const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -21,6 +23,9 @@ const ChatInterface: React.FC = () => {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [pinError, setPinError] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -29,8 +34,21 @@ const ChatInterface: React.FC = () => {
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (isAuthenticated) {
+      scrollToBottom();
+    }
+  }, [messages, isAuthenticated]);
+
+  const handlePinSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pinInput === PIN_CODE) {
+      setIsAuthenticated(true);
+      setPinError(false);
+    } else {
+      setPinError(true);
+      setPinInput('');
+    }
+  };
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -104,6 +122,36 @@ const ChatInterface: React.FC = () => {
       handleSend();
     }
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-logo">
+            <img src="/logo.png" alt="Rocky Logo" />
+          </div>
+          <h2>Agent Rocky</h2>
+          <p>Please enter your secure PIN</p>
+          <form onSubmit={handlePinSubmit}>
+            <input
+              type="password"
+              maxLength={4}
+              placeholder="••••"
+              value={pinInput}
+              onChange={(e) => {
+                setPinInput(e.target.value);
+                setPinError(false);
+              }}
+              className={pinError ? 'error' : ''}
+              autoFocus
+            />
+            {pinError && <span className="error-text">Incorrect PIN. Access Denied.</span>}
+            <button type="submit">Unlock Ally</button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="chat-container">
