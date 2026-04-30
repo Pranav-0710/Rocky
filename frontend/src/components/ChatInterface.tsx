@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, User, Bot, Loader2, Paperclip } from 'lucide-react';
+import { Send, Loader2, Paperclip } from 'lucide-react';
 import axios from 'axios';
 import './ChatInterface.css';
 
@@ -65,7 +65,7 @@ const ChatInterface: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/chat`, {
+      const response = await axios.post(`/api/chat`, {
         message: userMessage.text,
       });
 
@@ -100,7 +100,7 @@ const ChatInterface: React.FC = () => {
     formData.append('file', file);
 
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/memory/upload`, formData);
+      await axios.post(`/api/memory/upload`, formData);
       const successMessage: Message = {
         id: Date.now().toString(),
         text: `I've learned from "${file.name}". My memory is now sharper!`,
