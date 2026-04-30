@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+qdrant-client[fastembed]
+groq
+python-multipart
+python-dotenv
+pytest
+httpx
+anyio[trio]
+pytest-anyio
