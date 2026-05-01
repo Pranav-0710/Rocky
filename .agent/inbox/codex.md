@@ -1,77 +1,67 @@
 # Codex Inbox
 
 ## Active Task
-**TASK ID:** T004
-**PRIORITY:** HIGH — Debate Room Round 1 fixes
+**TASK ID:** T005
+**PRIORITY:** CRITICAL — Rocky's memory retrieval is broken
 **DESCRIPTION:**
 
-The Debate Room flagged 4 issues. Fix them in this exact order:
+Rocky has data in Qdrant Cloud (verified: 5 points including "My best friend is Arjun"), but when the user asks "who is my best friend", the `query_memory()` function returns empty context. The LLM then says "I don't have that information."
 
-### Fix 1 — Add `.env` support (SECURITY)
-1. Add `python-dotenv` to `requirements.txt`
-2. In `backend/app/main.py`, add at the very top:
-   ```python
-   from dotenv import load_dotenv
-   load_dotenv()
-   ```
-3. Create `backend/.env.example` (NOT `.env`) with:
-   ```
-   GEMINI_API_KEY=your_key_here
-   CHROMA_DB_DIR=./chroma_store
-   FRONTEND_URL=http://localhost:5173
-   ```
-4. Create `backend/.env` (add to `.gitignore` — never commit this)
+### Root Cause Investigation
+The `query_memory()` function in `backend/app/services/vector_db.py` has a bare `except Exception` that silently swallows errors. The likely cause is:
+1. The `fastembed` model download fails or times out on Render's free tier
+2. OR the Qdrant collection search fails silently
+3. OR the embedding vectors don't match (different model used for store vs query)
 
-### Fix 2 — Wire real Gemini API into `services/llm.py`
-Replace the mock with a real Gemini call:
+### What To Fix
+
+#### Fix 1 — Add logging to `query_memory()` in `backend/app/services/vector_db.py`
+- Import `logging` at the top
+- Create a logger: `logger = logging.getLogger(__name__)`
+- In the `except Exception` block, change from silent pass to: `logger.error(f"Memory query failed: {e}", exc_info=True)`
+- Add a `logger.info(f"Memory context retrieved: {len(results)} results")` after the search succeeds
+
+#### Fix 2 — Add logging to `store_file()` as well
+- Log how many chunks were stored and the collection name
+- Log any errors during embedding or upsert
+
+#### Fix 3 — Add a debug endpoint to `backend/app/routes/memory.py`
+Add a new GET endpoint:
 ```python
-import os
-import google.generativeai as genai
-
-genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-model = genai.GenerativeModel("gemini-1.5-flash")
-
-def get_reply(message: str, context: str = "") -> str:
-    system = f"You are Rocky, a loyal personal AI companion. You are warm, sharp, and always helpful.\n\nContext about the user:\n{context}"
-    response = model.generate_content(f"{system}\n\nUser: {message}")
-    return response.text
+@router.get("/memory/debug")
+async def debug_memory():
+    """Returns the current state of Rocky's memory for debugging."""
+    from app.services.vector_db import get_client, get_embedder, COLLECTION_NAME, query_memory
+    try:
+        client = get_client()
+        count = client.count(collection_name=COLLECTION_NAME).count
+        # Test a sample query
+        test_context = query_memory("best friend")
+        return {
+            "collection": COLLECTION_NAME,
+            "total_points": count,
+            "sample_query": "best friend",
+            "sample_result": test_context[:500] if test_context else "EMPTY — THIS IS THE BUG",
+            "embedder_status": "ok"
+        }
+    except Exception as e:
+        return {"error": str(e)}
 ```
 
-### Fix 3 — Wire real ChromaDB into `services/vector_db.py`
-```python
-import os
-import chromadb
+#### Fix 4 — Ensure the embedder is cached properly
+In `vector_db.py`, the `_embedder` global might not survive across Render's worker processes. Make sure `get_embedder()` handles re-initialization gracefully.
 
-def get_client():
-    path = os.environ.get("CHROMA_DB_DIR", "./chroma_store")
-    return chromadb.PersistentClient(path=path)
+### Files To Change
+- `backend/app/services/vector_db.py`
+- `backend/app/routes/memory.py`
 
-async def store_file(file) -> int:
-    contents = await file.read()
-    text = contents.decode("utf-8", errors="ignore")
-    chunks = [text[i:i+500] for i in range(0, len(text), 500)]
-    client = get_client()
-    collection = client.get_or_create_collection("rocky_memory")
-    for i, chunk in enumerate(chunks):
-        collection.add(documents=[chunk], ids=[f"{file.filename}_{i}"])
-    return len(chunks)
-
-def query_memory(prompt: str, n: int = 3) -> str:
-    client = get_client()
-    collection = client.get_or_create_collection("rocky_memory")
-    results = collection.query(query_texts=[prompt], n_results=n)
-    docs = results.get("documents", [[]])[0]
-    return "\n".join(docs)
+### Success Criteria
+After your changes, hitting `https://rocky-bafn.onrender.com/api/memory/debug` should return:
+```json
+{
+  "total_points": 5,
+  "sample_result": "... Arjun ..."
+}
 ```
 
-### Fix 4 — Update `routes/chat.py` and `routes/memory.py` to use real services
-- `routes/chat.py`: call `query_memory(request.message)` first, then pass result as `context` to `get_reply()`
-- `routes/memory.py`: replace `mock_store_file` with `store_file` from `vector_db.py`
-
-### Fix 5 — Update CORS in `main.py`
-```python
-import os
-allow_origins = [os.environ.get("FRONTEND_URL", "http://localhost:5173")]
-```
-
-**WHEN DONE:** Update `.agent/status/codex-status.md`
+**WHEN DONE:** Update `.agent/status/codex-status.md` and push to GitHub with message "Fix memory retrieval logging and debug endpoint"

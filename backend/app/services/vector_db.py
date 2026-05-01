@@ -1,9 +1,12 @@
 import os
 import uuid
+import logging
 
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
 from fastembed import TextEmbedding
+
+logger = logging.getLogger(__name__)
 
 COLLECTION_NAME = "rocky_memory"
 EMBED_MODEL = "BAAI/bge-small-en-v1.5"
@@ -15,7 +18,11 @@ _embedder = None
 def get_embedder() -> TextEmbedding:
     global _embedder
     if _embedder is None:
-        _embedder = TextEmbedding(model_name=EMBED_MODEL)
+        try:
+            _embedder = TextEmbedding(model_name=EMBED_MODEL)
+        except Exception:
+            _embedder = None
+            raise
     return _embedder
 
 
@@ -37,28 +44,39 @@ def _ensure_collection(client: QdrantClient) -> None:
 
 
 async def store_file(file) -> int:
-    contents = await file.read()
-    text = contents.decode("utf-8", errors="ignore")
-    chunks = [text[i:i+500] for i in range(0, len(text), 500)]
-    if not chunks:
-        return 0
+    try:
+        contents = await file.read()
+        text = contents.decode("utf-8", errors="ignore")
+        chunks = [text[i:i+500] for i in range(0, len(text), 500)]
+        if not chunks:
+            logger.info("No chunks stored for %s in %s", file.filename, COLLECTION_NAME)
+            return 0
 
-    embedder = get_embedder()
-    embeddings = list(embedder.embed(chunks))
+        embedder = get_embedder()
+        embeddings = list(embedder.embed(chunks))
 
-    client = get_client()
-    _ensure_collection(client)
+        client = get_client()
+        _ensure_collection(client)
 
-    points = [
-        PointStruct(
-            id=str(uuid.uuid4()),
-            vector=embedding.tolist(),
-            payload={"text": chunk, "source": file.filename},
+        points = [
+            PointStruct(
+                id=str(uuid.uuid4()),
+                vector=embedding.tolist(),
+                payload={"text": chunk, "source": file.filename},
+            )
+            for chunk, embedding in zip(chunks, embeddings)
+        ]
+        client.upsert(collection_name=COLLECTION_NAME, points=points)
+        logger.info(
+            "Stored %s chunks in %s for %s",
+            len(points),
+            COLLECTION_NAME,
+            file.filename,
         )
-        for chunk, embedding in zip(chunks, embeddings)
-    ]
-    client.upsert(collection_name=COLLECTION_NAME, points=points)
-    return len(chunks)
+        return len(points)
+    except Exception as e:
+        logger.error("Memory store failed: %s", e, exc_info=True)
+        raise
 
 
 def query_memory(prompt: str, n: int = 3) -> str:
@@ -69,12 +87,14 @@ def query_memory(prompt: str, n: int = 3) -> str:
         client = get_client()
         _ensure_collection(client)
 
-        results = client.search(
+        results = client.query_points(
             collection_name=COLLECTION_NAME,
-            query_vector=query_vector,
+            query=query_vector,
             limit=n,
         )
-        return "\n".join([r.payload.get("text", "") for r in results])
-    except Exception:
-        # If collection is empty or query fails, return empty context gracefully
+        points = getattr(results, "points", results)
+        logger.info("Memory context retrieved: %s results", len(points))
+        return "\n".join([r.payload.get("text", "") for r in points])
+    except Exception as e:
+        logger.error("Memory query failed: %s", e, exc_info=True)
         return ""
