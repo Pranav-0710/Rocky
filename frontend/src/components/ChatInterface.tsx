@@ -12,6 +12,8 @@ interface Message {
 
 const PIN_CODE = "0710"; // You can change this to any 4-digit code
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -65,7 +67,7 @@ const ChatInterface: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(`/api/chat`, {
+      const response = await axios.post(`${API_URL}/api/chat`, {
         message: userMessage.text,
       });
 
@@ -100,7 +102,7 @@ const ChatInterface: React.FC = () => {
     formData.append('file', file);
 
     try {
-      await axios.post(`/api/memory/upload`, formData);
+      await axios.post(`${API_URL}/api/memory/upload`, formData);
       const successMessage: Message = {
         id: Date.now().toString(),
         text: `I've learned from "${file.name}". My memory is now sharper!`,
