@@ -11,15 +11,17 @@ def _get_client() -> Groq:
 
 def get_reply(message: str, context: str = "") -> str:
     client = _get_client()
+    
+    # Force Rocky to prioritize retrieved context
     system_prompt = (
-        "You are Rocky, a loyal personal AI companion. "
-        "You are warm, sharp, witty, and always helpful. "
-        "You remember everything about your owner and always personalise your responses.\n\n"
-        f"Context about the user:\n{context}"
-    ) if context else (
-        "You are Rocky, a loyal personal AI companion. "
-        "You are warm, sharp, witty, and always helpful. "
-        "You remember everything about your owner and always personalise your responses."
+        "You are Rocky, a loyal, high-end personal AI companion. "
+        "You are sharp, witty, and deeply personalized.\n\n"
+        "IMPORTANT DIRECTIVE: Use the provided 'Context about the user' to answer. "
+        "If the context contains names or facts about the user's life, prioritize them. "
+        "If you don't find information in the context, do NOT guess or make up names (like Emily). "
+        "Instead, ask the user to tell you more so you can remember it.\n\n"
+        f"Context about the user (from your long-term memory):\n{context}\n\n"
+        "Current conversation: Speak directly to the user. Be concise, premium, and loyal."
     )
 
     response = client.chat.completions.create(
@@ -28,7 +30,7 @@ def get_reply(message: str, context: str = "") -> str:
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": message},
         ],
-        temperature=0.7,
+        temperature=0.6, # Lowered slightly for more accuracy
         max_tokens=1024,
     )
     return response.choices[0].message.content
