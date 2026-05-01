@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Loader2, Paperclip } from 'lucide-react';
 import axios from 'axios';
+import ReactMarkdown from 'react-markdown';
 import './ChatInterface.css';
 
 interface Message {
@@ -67,8 +68,14 @@ const ChatInterface: React.FC = () => {
     setIsLoading(true);
 
     try {
+      const history = messages.map(msg => ({
+        role: msg.sender === 'user' ? 'user' : 'assistant',
+        content: msg.text
+      }));
+
       const response = await axios.post(`${API_URL}/api/chat`, {
         message: userMessage.text,
+        history: history
       });
 
       const botMessage: Message = {
@@ -168,7 +175,11 @@ const ChatInterface: React.FC = () => {
         {messages.map((msg) => (
           <div key={msg.id} className={`message-wrapper ${msg.sender}`}>
             <div className="message-bubble">
-              {msg.text}
+              {msg.sender === 'bot' ? (
+                <ReactMarkdown>{msg.text}</ReactMarkdown>
+              ) : (
+                msg.text
+              )}
             </div>
             <div className="message-info">
               {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

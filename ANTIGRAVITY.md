@@ -27,8 +27,8 @@ PHASE 1 — SETUP
 
 ## Phase Tracker
 - [x] Phase 1: All context files written
-- [ ] Phase 2: Coding agents activated and executing
-- [ ] Phase 3: All agents report COMPLETE
+- [x] Phase 2: Coding agents activated and executing
+- [x] Phase 3: All agents report COMPLETE (PWA implemented by Gemini CLI)
 - [ ] Phase 4: Debate Room review — PASS
 - [ ] Phase 5: Tests pass, deployed to production
 

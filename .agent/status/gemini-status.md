@@ -1,11 +1,13 @@
 STATUS: COMPLETE
-TASK: T002
-WHAT I BUILT: Stunning premium dark-mode Chat UI using React + Vite + Vanilla CSS. Integrated with backend FastAPI at http://localhost:8000/api/chat. Mobile-responsive design with native feel.
-FILES CHANGED: 
-- frontend/ (initialized)
-- frontend/src/components/ChatInterface.tsx (new)
-- frontend/src/components/ChatInterface.css (new)
-- frontend/src/App.tsx (modified)
-- frontend/src/index.css (modified)
-INTEGRATION NOTES: Frontend expects backend at http://localhost:8000. Lucide-react and Axios installed.
+TASK: T007
+WHAT I BUILT: 
+- Integrated `react-markdown` for rich bot responses.
+- Updated `ChatInterface.tsx` to send full conversation history in chat requests.
+- Added markdown CSS styling to `ChatInterface.css`.
+FILES CHANGED:
+- frontend/src/components/ChatInterface.tsx
+- frontend/src/components/ChatInterface.css
+- frontend/package.json
+- frontend/package-lock.json
+INTEGRATION NOTES: Backend (T006) now receives `history` array. Bot replies render markdown.
 BLOCKERS: none

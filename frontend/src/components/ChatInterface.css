@@ -208,6 +208,48 @@ body {
   border-bottom-left-radius: 4px;
 }
 
+.bot .message-bubble p {
+  margin: 0.5rem 0;
+}
+
+.bot .message-bubble p:first-child {
+  margin-top: 0;
+}
+
+.bot .message-bubble p:last-child {
+  margin-bottom: 0;
+}
+
+.bot .message-bubble code {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  font-family: monospace;
+}
+
+.bot .message-bubble pre {
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 0.5rem 0;
+}
+
+.bot .message-bubble pre code {
+  background-color: transparent;
+  padding: 0;
+}
+
+.bot .message-bubble ul, .bot .message-bubble ol {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+}
+
+.bot .message-bubble h1, .bot .message-bubble h2, .bot .message-bubble h3 {
+  margin: 1rem 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
 .message-bubble.loading {
   padding: 10px 15px;
   display: flex;

@@ -1,6 +1,6 @@
 STATUS: COMPLETE
-TASK: T003
-WHAT I BUILT: Pytest suite for /api/chat and /api/memory/upload with mocked LLM/vector DB. Antigravity resolved shell blocker by adding anyio[trio], pytest-anyio deps and conftest.py.
-FILES CHANGED: backend/tests/test_routes.py, backend/tests/conftest.py, backend/requirements.txt
-INTEGRATION NOTES: Run with PYTHONPATH=backend. 2/2 tests PASSED.
-BLOCKERS: None — resolved by Antigravity.
+TASK: T006 + T008
+WHAT I BUILT: Added chat history support on /api/chat and updated LLM call path to build Groq-style message arrays (system + history + latest user message). Updated route tests to patch current LLM/vector services and added coverage for GET /api/memory/debug.
+FILES CHANGED: backend/app/routes/chat.py, backend/app/services/llm.py, backend/tests/test_routes.py
+INTEGRATION NOTES: Tests passed with `cmd /c "set PYTHONPATH=backend&& backend\.venv\Scripts\python.exe -m pytest backend/tests -q"` (3 passed).
+BLOCKERS: None for implementation/tests. Commit not created yet.

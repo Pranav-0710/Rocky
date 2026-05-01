@@ -1,7 +1,7 @@
 fastapi
 uvicorn
-qdrant-client[fastembed]
-groq
+chromadb
+google-genai
 python-multipart
 python-dotenv
 pytest
