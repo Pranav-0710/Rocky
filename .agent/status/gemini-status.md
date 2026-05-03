@@ -1,13 +1,13 @@
 STATUS: COMPLETE
-TASK: T007
+TASK: T010
 WHAT I BUILT: 
-- Integrated `react-markdown` for rich bot responses.
-- Updated `ChatInterface.tsx` to send full conversation history in chat requests.
-- Added markdown CSS styling to `ChatInterface.css`.
+- Rocky avatar integration (stone-spider theme).
+- Native-feel header w/ Eridian Engineer subtitle.
+- Auth screen upgrade: "Verify identity, human."
+- Flex-aligned message bubbles w/ inline avatars.
 FILES CHANGED:
+- frontend/public/rocky.webp (new)
 - frontend/src/components/ChatInterface.tsx
 - frontend/src/components/ChatInterface.css
-- frontend/package.json
-- frontend/package-lock.json
-INTEGRATION NOTES: Backend (T006) now receives `history` array. Bot replies render markdown.
+INTEGRATION NOTES: UI now reflects Rocky's personality. /rocky.webp used as main asset.
 BLOCKERS: none

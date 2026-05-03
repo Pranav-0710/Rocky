@@ -137,10 +137,10 @@ const ChatInterface: React.FC = () => {
       <div className="auth-container">
         <div className="auth-card">
           <div className="auth-logo">
-            <img src="/logo.png" alt="Rocky Logo" />
+            <img src="/rocky.webp" alt="Rocky" />
           </div>
           <h2>Agent Rocky</h2>
-          <p>Please enter your secure PIN</p>
+          <p>Verify identity, human.</p>
           <form onSubmit={handlePinSubmit}>
             <input
               type="password"
@@ -155,7 +155,7 @@ const ChatInterface: React.FC = () => {
               autoFocus
             />
             {pinError && <span className="error-text">Incorrect PIN. Access Denied.</span>}
-            <button type="submit">Unlock Ally</button>
+            <button type="submit">Authenticate</button>
           </form>
         </div>
       </div>
@@ -165,15 +165,19 @@ const ChatInterface: React.FC = () => {
   return (
     <div className="chat-container">
       <header className="chat-header">
-        <h1>Rocky AI</h1>
-        <div className="header-status">
-          <div className={`status-dot ${isLoading ? 'loading' : 'online'}`}></div>
+        <img src="/rocky.webp" className="header-avatar" alt="Rocky" />
+        <div className="header-info">
+          <span className="header-name">Rocky</span>
+          <span className="header-subtitle">Eridian Engineer · Online</span>
         </div>
       </header>
 
       <main className="messages-list">
         {messages.map((msg) => (
           <div key={msg.id} className={`message-wrapper ${msg.sender}`}>
+            {msg.sender === 'bot' && (
+              <img src="/rocky.webp" className="rocky-avatar" alt="Rocky" />
+            )}
             <div className="message-bubble">
               {msg.sender === 'bot' ? (
                 <ReactMarkdown>{msg.text}</ReactMarkdown>
